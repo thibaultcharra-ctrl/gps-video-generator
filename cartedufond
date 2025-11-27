@@ -1,0 +1,22 @@
+from staticmap import StaticMap
+from PIL import Image
+
+# Paramètres
+img_width, img_height = 800, 534  #1200x800
+center_lat, center_lon = 48.8504, 2.2181
+zoom = 13  # ajuster pour couvrir la zone souhaitée
+background_map_path = "fond14.png"
+
+# Créer la carte
+m = StaticMap(img_width, img_height, url_template='https://tile.openstreetmap.org/{z}/{x}/{y}.png')
+
+# Ajouter un point invisible pour forcer le centre
+from staticmap import CircleMarker
+marker = CircleMarker((center_lon, center_lat), "#00000000", 0)  # couleur transparente, rayon 0
+m.add_marker(marker)
+
+# Rendre l'image
+image = m.render(zoom=zoom)
+image.save(background_map_path)
+
+print("fond14.png généré correctement, centré sur la zone !")

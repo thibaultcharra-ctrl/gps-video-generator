@@ -1,0 +1,87 @@
+import os
+import glob
+import gzip
+import shutil
+import folium
+import gpxpy
+import pandas as pd
+from fitparse import FitFile
+import random
+import colorsys
+
+
+# ---------- FONCTION COULEUR ----------
+def random_color():
+    return "#{:06x}".format(random.randint(0, 0xFFFFFF))
+
+# -----Fonction qui génère une couleur bleue graduée selon l'ordre (i / total)
+def blue_shade(i, total):
+    # hue = 2/3 (~bleu dans HSV), saturation fixe à 1
+    h = 2/3  
+    s = 1.0
+    # On inverse la valeur (value) : 1 → clair, 0 → très sombre
+    # On veut que plus i est grand → plus sombre → v diminue
+    v = 1.0 - (i / (total - 1)) * 0.7  # *0.7 pour que ça ne devienne pas noir complet
+    r, g, b = colorsys.hsv_to_rgb(h, s, v)
+    # Convertir en hex
+    return "#{:02x}{:02x}{:02x}".format(int(r * 255), int(g * 255), int(b * 255))
+
+# Fonctions de lecture gpx / fit / décompression comme avant
+def read_gpx(filepath):
+    with open(filepath, "r") as f:
+        gpx = gpxpy.parse(f)
+    points = []
+    for track in gpx.tracks:
+        for seg in track.segments:
+            for p in seg.points:
+                points.append([p.latitude, p.longitude])
+    return pd.DataFrame(points, columns=["lat", "lon"]) if points else pd.DataFrame(columns=["lat","lon"])
+
+
+def decompress_gz(filepath):
+    outpath = filepath[:-3]
+    if not os.path.exists(outpath):
+        with gzip.open(filepath, "rb") as f_in:
+            with open(outpath, "wb") as f_out:
+                shutil.copyfileobj(f_in, f_out)
+    return outpath
+
+
+def read_fit(filepath):
+    points = []
+    with fitdecode.FitReader(filepath) as fit:
+        for frame in fit:
+            if not isinstance(frame, fitdecode.FitDataMessage):
+                continue
+            if frame.name != "record":
+                continue
+            if not frame.has_field("position_lat") or not frame.has_field("position_long"):
+                continue
+            lat = frame.get_value("position_lat", fallback=None)
+            lon = frame.get_value("position_long", fallback=None)
+            if lat is None or lon is None:
+                continue
+            lat = lat * (180 / 2**31)
+            lon = lon * (180 / 2**31)
+            if not (-90 <= lat <= 90 and -180 <= lon <= 180):
+                continue
+            points.append([lat, lon])
+    return pd.DataFrame(points, columns=["lat", "lon"]) if points else pd.DataFrame(columns=["lat","lon"])
+
+
+# Charger les fichiers
+folder = "/Users/Tibo/Documents/strava/export_65735146/activities"
+gpx_files = glob.glob(os.path.join(folder, "*.gpx"))
+fit_files = glob.glob(os.path.join(folder, "*.fit"))
+gz_files = glob.glob(os.path.join(folder, "*.fit.gz"))
+
+for gz in gz_files:
+    fit_files.append(decompress_gz(gz))
+
+all_files = gpx_files + fit_files
+total = len(all_files)
+
+# Créer la carte
+m = folium.Map(location=[48.8566, 2.3522], zoom_start=6)
+
+

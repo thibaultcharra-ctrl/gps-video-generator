@@ -1,0 +1,6 @@
+# comment
+print("lets go nuts")
+for i, frame in enumerate(frames):
+    print(f"Frame {i} shape: {frame.shape}")
+    if len(frame.shape) != 3 or frame.shape[2] not in [3, 4]:
+        print(f"Warning: Frame {i} is not in expected RGB or RGBA format. Skipping this frame.")
