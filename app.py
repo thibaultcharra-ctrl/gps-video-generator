@@ -96,15 +96,23 @@ with st.sidebar:
         # Instructions pour obtenir les credentials
         with st.expander("ℹ️ Comment obtenir vos credentials Strava"):
             st.markdown("""
-            **Étapes:**
-            1. Allez sur [strava.com/settings/api](https://www.strava.com/settings/api)
-            2. Créez une application
-            3. Notez votre **Client ID** et **Client Secret**
-            4. Utilisez l'URL d'autorisation ci-dessous pour obtenir un code
-            5. Échangez le code contre un refresh token
+            **Étapes pour configurer l'API Strava:**
             
-            **Authorization Callback Domain:** `localhost`
+            1. Allez sur [strava.com/settings/api](https://www.strava.com/settings/api)
+            2. Cliquez sur **"Create an App"** ou **"My API Application"**
+            3. Remplissez le formulaire :
+               - **Application Name:** GPS Video Generator
+               - **Category:** Visualizer
+               - **Website:** http://localhost:8501
+               - **Authorization Callback Domain:** `localhost`
+            4. Cliquez sur **"Create"**
+            5. Notez votre **Client ID** et **Client Secret**
+            6. Collez-les dans les champs ci-dessous
+            
+            ⚠️ **Important:** Le callback domain doit être exactement `localhost` (sans http://)
             """)
+            
+            st.image("https://i.imgur.com/9rZL1Qm.png", caption="Exemple de configuration Strava", use_column_width=True)
         
         # Credentials Strava
         client_id = st.text_input(
@@ -124,26 +132,63 @@ with st.sidebar:
         if client_secret:
             st.session_state['strava_client_secret'] = client_secret
         
+        # Capturer automatiquement le code depuis l'URL
+        query_params = st.query_params
+        auth_code_from_url = query_params.get("code", None)
+        
+        # Si on a un code dans l'URL, l'utiliser automatiquement
+        if auth_code_from_url and client_id and client_secret and not st.session_state.get('strava_refresh_token'):
+            try:
+                with st.spinner("🔄 Échange du code en cours..."):
+                    tokens = exchange_code_for_token(client_id, client_secret, auth_code_from_url)
+                    st.session_state['strava_refresh_token'] = tokens['refresh_token']
+                    st.session_state['strava_access_token'] = tokens['access_token']
+                    
+                    # Nettoyer l'URL
+                    st.query_params.clear()
+                    st.success("✅ Authentification réussie!")
+                    st.rerun()
+            except Exception as e:
+                st.error(f"❌ Erreur lors de l'échange du code: {e}")
+                st.query_params.clear()
+        
         # Étape 1: Obtenir le code d'autorisation
         if client_id and not st.session_state.get('strava_refresh_token'):
-            st.markdown("**Étape 1: Autorisation**")
+            st.markdown("**🔐 Authentification Strava**")
             auth_url = get_strava_auth_url(client_id)
-            st.markdown(f'[🔗 Cliquez ici pour autoriser l\'application]({auth_url})')
             
-            st.markdown("**Étape 2: Entrez le code**")
-            st.caption("Après autorisation, vous serez redirigé vers une URL contenant un code")
-            auth_code = st.text_input("Code d'autorisation", key="auth_code")
+            st.markdown(
+                f'<div class="strava-box">'
+                f'<h3>Étape 1: Autoriser l\'application</h3>'
+                f'<a href="{auth_url}" target="_blank" style="color:white;text-decoration:none;">'
+                f'<b>🔗 Cliquer ici pour autoriser sur Strava</b></a>'
+                f'</div>',
+                unsafe_allow_html=True
+            )
             
-            if st.button("Échanger le code contre un token") and auth_code:
-                try:
-                    with st.spinner("Échange du code..."):
-                        tokens = exchange_code_for_token(client_id, client_secret, auth_code)
-                        st.session_state['strava_refresh_token'] = tokens['refresh_token']
-                        st.session_state['strava_access_token'] = tokens['access_token']
-                        st.success("✅ Token obtenu avec succès!")
-                        st.rerun()
-                except Exception as e:
-                    st.error(f"Erreur: {e}")
+            st.info("💡 Après autorisation, vous serez redirigé automatiquement et le code sera capturé.")
+            
+            # Option manuelle si la capture auto ne marche pas
+            with st.expander("🔧 Saisie manuelle du code (si nécessaire)"):
+                st.caption("Si la capture automatique ne fonctionne pas, copiez le code depuis l'URL")
+                st.caption("L'URL ressemble à: `http://localhost:8501/?code=VOTRE_CODE&scope=...`")
+                
+                auth_code_manual = st.text_input(
+                    "Code d'autorisation",
+                    placeholder="Collez le code ici",
+                    key="auth_code_manual"
+                )
+                
+                if st.button("Valider le code") and auth_code_manual:
+                    try:
+                        with st.spinner("Échange du code..."):
+                            tokens = exchange_code_for_token(client_id, client_secret, auth_code_manual)
+                            st.session_state['strava_refresh_token'] = tokens['refresh_token']
+                            st.session_state['strava_access_token'] = tokens['access_token']
+                            st.success("✅ Token obtenu avec succès!")
+                            st.rerun()
+                    except Exception as e:
+                        st.error(f"Erreur: {e}")
         
         # Si on a un refresh token
         if st.session_state.get('strava_refresh_token'):
