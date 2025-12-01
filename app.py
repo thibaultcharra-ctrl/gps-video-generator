@@ -117,12 +117,12 @@ with st.sidebar:
         # Credentials Strava
         client_id = st.text_input(
             "Client ID",
-            value=st.session_state.get('strava_client_id', ''),
-            type="password"
+            value=st.session_state.get('strava_client_id', '187965'),
+            type="login"
         )
         client_secret = st.text_input(
             "Client Secret",
-            value=st.session_state.get('strava_client_secret', ''),
+            value=st.session_state.get('strava_client_secret', '68914501ad40e68b92aecd93bb00a512a66ab690'),
             type="password"
         )
         
@@ -489,4 +489,4 @@ with help_col2:
         """)
 
 st.divider()
-st.caption("Made with ❤️ using Streamlit | 🏃 GPS Video Generator v3.0 - Powered by Strava")
+st.caption("Made by ❤️ Thib | 🏃 GPS Video Generator v3.0 - Powered by Strava")
