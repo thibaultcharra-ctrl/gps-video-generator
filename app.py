@@ -118,7 +118,7 @@ with st.sidebar:
         client_id = st.text_input(
             "Client ID",
             value=st.session_state.get('strava_client_id', '187965'),
-            type="login"
+            type="text"
         )
         client_secret = st.text_input(
             "Client Secret",
