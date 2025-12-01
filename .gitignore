@@ -13,3 +13,7 @@ __pycache__/
 *.pkl
 *.csv
 .DS_Store
+venv/
+__pycache__/
+*.pyc
+.DS_Store
