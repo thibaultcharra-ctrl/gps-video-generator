@@ -1,6 +1,6 @@
 # genrunzS1.py
 # -*- coding: utf-8 -*-
-from gencarte import main_pipeline
+from gencarte import generate_map_image
 import os, glob, gzip, shutil, math, datetime
 import pandas as pd, numpy as np, pytz, gpxpy, fitdecode
 from PIL import Image, ImageDraw, ImageFont
