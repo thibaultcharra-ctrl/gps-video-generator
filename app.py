@@ -177,7 +177,7 @@ with st.sidebar:
                 auth_code_manual = st.text_input(
                     "Code d'autorisation",
                     placeholder="Collez le code ici",
-                    key="auth_code_manual"
+                    key="auth_code_manual",
                     default="c208ce8b3c8b7c1b036b959ce45876b0823c5c76"
                 )
                 
