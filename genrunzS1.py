@@ -1,5 +1,6 @@
 # genrunzS1.py
 # -*- coding: utf-8 -*-
+from gencarte import main_pipeline
 import os, glob, gzip, shutil, math, datetime
 import pandas as pd, numpy as np, pytz, gpxpy, fitdecode
 from PIL import Image, ImageDraw, ImageFont
@@ -173,6 +174,27 @@ def interpolate_points(points, max_points):
     indices = [int(i*(len(points)-1)/(max_points-1)) for i in range(max_points)]
     return [points[i] for i in indices]
 
+def add_copyright(img, text="©RunnerSuresnois"):
+    """
+    Ajoute un copyright en bas à gauche de l'image.
+    img = image PIL
+    Retourne une image PIL
+    """
+    image = img.copy()
+    draw = ImageDraw.Draw(image)
+    # couleur et style
+    font_size = max(16, image.width // 40)
+    try:
+        font = ImageFont.truetype("arial.ttf", font_size)
+    except:
+        font = ImageFont.load_default()
+    margin = 10
+    x = margin
+    y = image.height - font_size - margin
+    draw.text((x, y), text, fill=(255, 255, 255), font=font)
+
+    return image
+
 
 # ===============================
 # MAIN PIPELINE
@@ -216,15 +238,16 @@ def main_pipeline(
     img_width, img_height = 800, 534
     zoom = 13
     fps_final = 24
-    background_map_path = "fond14.png"
+    # background_map_path = "fond14.png"
     SUPER_SCALE = 2
     HI_W = img_width * SUPER_SCALE
     HI_H = img_height * SUPER_SCALE
     
-    if not os.path.exists(background_map_path):
-        raise FileNotFoundError(f"Background map not found: {background_map_path}")
-    
-    background_map = Image.open(background_map_path).resize((HI_W, HI_H), Image.LANCZOS)
+    # if not os.path.exists(background_map_path):
+    #     raise FileNotFoundError(f"Background map not found: {background_map_path}") 
+    # background_map = Image.open(background_map_path).resize((HI_W, HI_H), Image.LANCZOS)
+    background_map = generate_map_image(img_width, img_height, center_lat, center_lon, zoom)
+    background_map = add_copyright(background_map)
     start_date_limit = datetime.datetime(2025, 1, 1, tzinfo=datetime.timezone.utc)
     temp_video_path = "temptout_video.mp4"
 

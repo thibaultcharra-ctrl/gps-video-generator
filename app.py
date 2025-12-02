@@ -1,4 +1,4 @@
-# app.py - Version avec intégration Strava
+# app.py - Version avec nouveau menu
 import streamlit as st
 import os
 import time
@@ -85,6 +85,7 @@ with st.sidebar:
         "Choisir la source",
         ["🗂️ Dossier local", "🏃 Strava API"],
         help="Choisissez d'où récupérer vos fichiers GPS"
+        default="🏃 Strava API"
     )
     
     st.divider()
@@ -112,7 +113,7 @@ with st.sidebar:
             ⚠️ **Important:** Le callback domain doit être exactement `localhost` (sans http://)
             """)
             
-            st.image("https://i.imgur.com/9rZL1Qm.png", caption="Exemple de configuration Strava", use_column_width=True)
+            st.image("https://i.imgur.com/9rZL1Qm.png", caption="Exemple de configuration Strava", use_container_width=True)
         
         # Credentials Strava
         client_id = st.text_input(
@@ -177,6 +178,7 @@ with st.sidebar:
                     "Code d'autorisation",
                     placeholder="Collez le code ici",
                     key="auth_code_manual"
+                    default="c208ce8b3c8b7c1b036b959ce45876b0823c5c76"
                 )
                 
                 if st.button("Valider le code") and auth_code_manual:
@@ -213,7 +215,7 @@ with st.sidebar:
             
             date_range = st.date_input(
                 "Période",
-                value=(datetime.now() - timedelta(days=30), datetime.now()),
+                value=(datetime.now() - timedelta(days=365), datetime.now()),
                 help="Sélectionnez la période des activités"
             )
             
@@ -228,7 +230,7 @@ with st.sidebar:
                 "Nombre max d'activités",
                 min_value=1,
                 max_value=500,
-                value=50,
+                value=365,
                 help="Limite le nombre d'activités téléchargées"
             )
             
@@ -247,23 +249,16 @@ with st.sidebar:
     st.divider()
     
     # Paramètres communs
-    st.subheader("🎨 Rendu")
-    frame_folder = st.text_input("Dossier des frames", "Frame_mercator1")
+    st.subheader("💾 Rendu video")
+    frame_folder = "Frame_mercator1"
     max_frames_per_course = st.number_input("Segments par course", value=10, step=10)
-    speed_factor = st.slider("⚡ Vitesse", 1.0, 15.0, 7.0, 0.5)
-    
-    st.divider()
-    
+    speed_factor = st.slider("⚡ Vitesse", 1.0, 15.0, 7.0, 0.5)   
+    st.divider()    
     st.subheader("🎵 Audio")
-    music_path = st.text_input("Fichier musique", "/Users/Tibo/audiomachine.mp3")
-    
+    music_path = st.text_input("Fichier musique", "/Users/Tibo/audiomachine.mp3")    
+    st.divider()    
+    output_file = "video_final.mp4"   
     st.divider()
-    
-    st.subheader("💾 Sortie")
-    output_file = st.text_input("Nom du fichier", "video_final.mp4")
-    
-    st.divider()
-    
     st.subheader("🔧 Options")
     errase_frame_folder = st.checkbox("🗑️ Supprimer frames existantes", value=True)
     skip_loading = st.checkbox("⏭️ Skip chargement", value=False)
