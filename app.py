@@ -84,7 +84,7 @@ with st.sidebar:
     data_source = st.radio(
         "Choisir la source",
         ["🗂️ Dossier local", "🏃 Strava API"],
-        help="Choisissez d'où récupérer vos fichiers GPS"
+        help="Choisissez d'où récupérer vos fichiers GPS",
         default="🏃 Strava API"
     )
     
